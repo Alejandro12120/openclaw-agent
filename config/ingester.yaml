@@ -1,0 +1,61 @@
+# Un único proceso escribe las tres bases; los MCP abren cada una en modo lectura.
+storage:
+  data_dir: /rag/ingester
+
+lancedb:
+  databases:
+    personal: /rag/personal/haiku.rag.lancedb
+    universidad: /rag/universidad/haiku.rag.lancedb
+    tecnico-homelab: /rag/tecnico-homelab/haiku.rag.lancedb
+
+providers:
+  ollama:
+    base_url: http://ollama:11434
+  docling_serve:
+    base_url: http://docling:5001
+
+# Debe coincidir con el embedder de config/haiku.rag.yaml.
+embeddings:
+  model:
+    provider: ollama
+    name: bge-m3
+    vector_dim: 1024
+
+processing:
+  converter: docling-serve
+  chunker: docling-serve
+  chunking_tokenizer: BAAI/bge-m3
+  split_pages: 10
+  conversion_options:
+    generate_page_images: false
+  # Ingesta de texto: no requiere un modelo generativo o de visión adicional.
+  pictures: none
+  auto_title: false
+
+ingester:
+  queue:
+    path: /rag/ingester/queue.db
+  workers:
+    worker_count: 1
+  api:
+    # Control y healthcheck dentro del contenedor; sin puerto publicado.
+    host: 127.0.0.1
+  databases:
+    personal:
+      sources:
+        - type: fs
+          id: personal-documents
+          root: /documents/personal
+          delete_orphans: false
+    universidad:
+      sources:
+        - type: fs
+          id: universidad-documents
+          root: /documents/universidad
+          delete_orphans: false
+    tecnico-homelab:
+      sources:
+        - type: fs
+          id: tecnico-homelab-documents
+          root: /documents/tecnico
+          delete_orphans: false
