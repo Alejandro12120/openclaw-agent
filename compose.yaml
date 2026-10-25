@@ -1,0 +1,183 @@
+name: openclaw-agent
+
+## Bloque común para montar tres instancias de haiku-rag.
+x-haiku-rag: &haiku-rag
+  image: ghcr.io/ggozad/haiku.rag-slim:0.101.0
+  user: "1000:1000"
+  init: true
+  restart: unless-stopped
+  environment:
+    HOME: /rag
+    XDG_CACHE_HOME: /rag/.cache
+  command: >-
+    haiku-rag --config /app/haiku.rag.yaml mcp --host 0.0.0.0 --port 8001
+  depends_on:
+    haiku-ingester:
+      condition: service_healthy
+    reranker:
+      condition: service_healthy
+  healthcheck:
+    test:
+      - CMD
+      - python
+      - -c
+      - >-
+        import socket;
+        socket.create_connection(('127.0.0.1', 8001), timeout=2).close()
+    interval: 30s
+    timeout: 5s
+    retries: 3
+    start_period: 30s
+
+services:
+  ollama:
+    image: ollama/ollama:0.40.11
+    user: "1000:1000"
+    restart: unless-stopped
+    environment:
+      HOME: /var/lib/ollama
+      OLLAMA_MODELS: /var/lib/ollama/models
+      OLLAMA_HOST: 0.0.0.0:11434
+      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_NUM_PARALLEL: "1"
+    volumes:
+      - ./rag/models/ollama:/var/lib/ollama
+    gpus: all
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 20s
+
+  ollama-pull:
+    image: ${OLLAMA_IMAGE:-ollama/ollama:0.40.11}
+    restart: "no"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    command: ["pull", "bge-m3"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  docling:
+    image: quay.io/docling-project/docling-serve-cpu:v1.38.0
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    environment:
+      HOME: /cache
+      HF_HOME: /cache/huggingface
+      DOCLING_SERVE_ENG_LOC_NUM_WORKERS: "1"
+    volumes:
+      - ./rag/models/docling:/cache
+    mem_limit: ${DOCLING_MEMORY_LIMIT:-4g}
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:5001/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 60s
+
+  reranker:
+    image: michaelf34/infinity:0.0.77
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    environment:
+      HOME: /cache
+      HF_HOME: /cache/huggingface
+      INFINITY_ANONYMOUS_USAGE_STATS: "0"
+    command: >-
+      v2 --model-id BAAI/bge-reranker-v2-m3
+      --engine torch --device cuda --dtype float16
+      --batch-size 4 --url-prefix /v1 --port 7997
+    volumes:
+      - ./rag/models/reranker:/cache
+    gpus: all
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:7997/health', timeout=2)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10m
+
+  haiku-ingester:
+    image: ghcr.io/ggozad/haiku.rag-slim:0.101.0
+    user: "1000:1000"
+    init: true
+    restart: unless-stopped
+    environment:
+      HOME: /rag/ingester
+      XDG_CACHE_HOME: /rag/ingester/.cache
+      HF_HOME: /rag/ingester/.cache/huggingface
+    command: ["haiku-ingester", "--config", "/app/ingester.yaml", "serve"]
+    volumes:
+      - ./rag:/rag
+      - ./documents:/documents:ro
+      - ./config/ingester.yaml:/app/ingester.yaml:ro
+    depends_on:
+      ollama-pull:
+        condition: service_completed_successfully
+      docling:
+        condition: service_healthy
+    stop_grace_period: 180s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://127.0.0.1:8765/health', timeout=2)
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
+  openclaw:
+    image: ghcr.io/openclaw/openclaw:2026.10.7
+    init: true
+    restart: unless-stopped
+    environment:
+      HOME: /home/node
+      OPENCLAW_STATE_DIR: /home/node/.openclaw
+      OPENCLAW_CONFIG_PATH: /home/node/.openclaw/openclaw.json
+      OPENCLAW_WORKSPACE_DIR: /home/node/.openclaw/workspace
+      TZ: ${TZ:-Europe/Madrid}
+    command: ["node", "dist/index.js", "gateway", "--bind", "lan", "--port", "18789"]
+    ports:
+      - "127.0.0.1:${OPENCLAW_PORT:-18789}:18789"
+    volumes:
+      - ./data/openclaw:/home/node/.openclaw
+      - ./data/auth:/home/node/.config/openclaw
+    healthcheck:
+      test: ["CMD", "node", "dist/docker-healthcheck.js"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  haiku-rag-personal:
+    <<: *haiku-rag
+    volumes:
+      - ./rag/personal:/rag
+      - ./config/haiku.rag.yaml:/app/haiku.rag.yaml:ro
+
+  haiku-rag-universidad:
+    <<: *haiku-rag
+    volumes:
+      - ./rag/universidad:/rag
+      - ./config/haiku.rag.yaml:/app/haiku.rag.yaml:ro
+
+  haiku-rag-tecnico-homelab:
+    <<: *haiku-rag
+    volumes:
+      - ./rag/tecnico-homelab:/rag
+      - ./config/haiku.rag.yaml:/app/haiku.rag.yaml:ro

@@ -1,0 +1,20 @@
+# Cada servicio monta únicamente la carpeta de su rol en /rag.
+storage:
+  data_dir: /rag
+
+providers:
+  ollama:
+    base_url: http://ollama:11434
+
+embeddings:
+  model:
+    provider: ollama
+    name: bge-m3
+    vector_dim: 1024
+
+# Cliente HTTP compatible con /v1/rerank de Infinity; no carga el modelo aquí.
+reranking:
+  model:
+    provider: vllm
+    name: BAAI/bge-reranker-v2-m3
+    base_url: http://reranker:7997/v1
