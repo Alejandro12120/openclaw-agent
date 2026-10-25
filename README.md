@@ -3,11 +3,12 @@
 Infraestructura para un OpenClaw y tres bases RAG: **personal**, **universidad**
 y **técnico-homelab**. Comparten la ingesta, los embeddings y el reranker.
 
-Esta fase prepara los servicios. La creación de los tres agentes, la conexión
+Esta fase prepara los servicios y los tres agentes con sus roles. La conexión
 con sus RAG y los permisos por agente quedan para las siguientes PR.
 
 **Primera instalación:** sigue los pasos de [puesta en marcha](#puesta-en-marcha).
-Si OpenClaw ya está configurado, ve directamente a [abrir el panel](#4-abrir-el-panel).
+Si OpenClaw ya está configurado, ve a [abrir el panel](#4-abrir-el-panel) y
+[configurar los agentes](#5-configurar-los-agentes-y-sus-roles).
 
 ## Puesta en marcha
 
@@ -36,6 +37,8 @@ directorios. Si ya tienes `.env`, conserva el tuyo.
 test -e .env || cp .env.example .env
 mkdir -p documents/personal documents/universidad documents/tecnico
 mkdir -p data/openclaw data/auth rag/ingester
+mkdir -p data/openclaw/workspace data/openclaw/workspace-universidad
+mkdir -p data/openclaw/workspace-tecnico-homelab
 mkdir -p rag/personal rag/universidad rag/tecnico-homelab
 mkdir -p rag/models/ollama rag/models/reranker rag/models/docling
 chmod 700 data/openclaw data/auth rag rag/ingester rag/models
@@ -152,6 +155,55 @@ sustituye solo el puerto de destino (el último `18789`) en el comando SSH;
 así puedes abrir el enlace original sin modificarlo. El panel se publica solo
 en `127.0.0.1`; los servicios RAG y de modelos no publican puertos en el host.
 
+### 5. Configurar los agentes y sus roles
+
+Tras configurar el proveedor del modelo en el paso 3, aplica
+[`config/openclaw-agents.json`](config/openclaw-agents.json). Conserva el agente
+actual con ID `main` como **Personal** y añade los otros dos:
+
+| ID | Nombre y función | Workspace dentro de `data/openclaw/` |
+| --- | --- | --- |
+| `main` | **Personal**: organización, tareas y planes personales; agente por defecto | `workspace/` |
+| `universidad` | **Universidad**: tutoría, apuntes, ejercicios y estudio | `workspace-universidad/` |
+| `tecnico-homelab` | **Técnico-Homelab**: sistemas, redes, contenedores y diagnóstico | `workspace-tecnico-homelab/` |
+
+Los roles están en los archivos `SOUL.md` de [`config/agents/`](config/agents/).
+Compose los monta en solo lectura: edita esos archivos y repite la recreación
+de OpenClaw indicada abajo para cambiar los roles.
+Si ya personalizaste el `SOUL.md` del agente actual, incorpora lo que quieras
+conservar al rol Personal antes de continuar; el montaje oculta el archivo
+anterior, aunque lo conserva en `data/`.
+
+En instalaciones existentes, crea también los tres directorios de workspace
+del paso 2 para que pertenezcan a tu usuario, antes de ejecutar estos comandos.
+Con OpenClaw arrancado como en el paso 3, valida primero el parche sin escribir
+la configuración. Usa `exec` para ejecutarlo en el mismo contenedor del Gateway:
+
+```sh
+docker compose exec -T openclaw node \
+  dist/index.js config patch --stdin --dry-run < config/openclaw-agents.json
+```
+
+Si la validación termina correctamente, aplica el mismo parche y recrea
+OpenClaw para cargar los montajes de roles:
+
+```sh
+docker compose exec -T openclaw node \
+  dist/index.js config patch --stdin < config/openclaw-agents.json
+docker compose up -d --no-deps --force-recreate --wait openclaw
+docker compose exec openclaw node dist/index.js agents list
+```
+
+El parche se combina con la configuración existente y se puede repetir:
+conserva modelos, credenciales, sesiones y otros agentes que hayas añadido.
+Los nuevos agentes heredan el modelo por defecto configurado en OpenClaw.
+En el panel, abre **Agents** y usa **Open chat** en el agente que quieras.
+Los canales y su enrutamiento quedan pendientes de configurar.
+
+Cada agente tiene su workspace y su estado de sesiones, pero esto **no es
+aislamiento de seguridad**. Los roles son instrucciones de comportamiento;
+los permisos por agente y la integración MCP todavía no están configurados.
+
 ## Añadir documentos
 
 Coloca cada archivo en la carpeta de su ámbito:
@@ -206,7 +258,7 @@ Todas las rutas son relativas al repositorio:
 | Ruta | Contenido |
 | --- | --- |
 | `documents/` | Documentos originales; el ingester no los modifica |
-| `data/openclaw/` | Configuración, sesiones y workspace de OpenClaw |
+| `data/openclaw/` | Configuración, sesiones y workspaces de los agentes |
 | `data/auth/` | Directorio de secretos de perfiles de OpenClaw |
 | `rag/<rol>/haiku.rag.lancedb/` | Base de cada ámbito |
 | `rag/ingester/` | Cola y cachés del ingester |
@@ -219,7 +271,7 @@ copias de seguridad.
 
 | Servicio | Función |
 | --- | --- |
-| OpenClaw `2026.10.7` | Gateway y panel web de los futuros agentes |
+| OpenClaw `2026.10.7` | Gateway y panel web de Personal, Universidad y Técnico-Homelab |
 | haiku-ingester `0.101.0` | Un único proceso que mantiene las tres bases |
 | Docling Serve CPU `1.38.0` | Conversión y fragmentación mediante su API interna |
 | Ollama `0.40.11` | Un `bge-m3` compartido para ingesta y consultas, con vectores de 1024 dimensiones |
@@ -235,9 +287,10 @@ Cambiar de modelo requiere reindexar los documentos, aunque conserve la dimensi�
 
 ### Pendiente para las siguientes PR
 
-Quedan pendientes los agentes, sus roles, la integración MCP y los permisos por
-agente. OpenClaw todavía comparte red con los tres MCP; aún no está restringido
-a qué base puede acceder cada agente. Sus endpoints internos son
+Quedan pendientes la integración MCP y los permisos por agente, además de los
+canales y su enrutamiento. OpenClaw todavía comparte red con los tres MCP;
+aún no está restringido a qué base puede acceder cada agente. Sus endpoints
+internos son
 `http://haiku-rag-personal:8001/mcp`, `http://haiku-rag-universidad:8001/mcp` y
 `http://haiku-rag-tecnico-homelab:8001/mcp`.
 
@@ -246,6 +299,9 @@ a qué base puede acceder cada agente. Sus endpoints internos son
 - [Docker de OpenClaw](https://docs.openclaw.ai/install/docker)
 - [Asistente de OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/onboard.md)
 - [Acceso al panel en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/dashboard.md)
+- [Agentes en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/agents.md)
+- [Parches de configuración en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/config.md#config-patch)
+- [Workspaces y archivos de rol en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/concepts/agent-workspace.md)
 - [Imágenes publicadas de haiku-rag](https://ggozad.github.io/haiku.rag/installation/#docker)
 - [Docling remoto y compatibilidad](https://github.com/ggozad/haiku.rag/blob/0.101.0/docs/remote-processing.md)
 - [Ingesta multibase](https://github.com/ggozad/haiku.rag/blob/0.101.0/docs/ingester.md)

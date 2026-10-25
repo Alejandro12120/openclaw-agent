@@ -1,6 +1,6 @@
 # Trabajo en este repositorio
 
-- Mantener PR pequeñas. Esta primera fase contiene la infraestructura Docker.
+- Mantener PR pequeñas. Esta fase contiene la infraestructura Docker y los roles.
 - Usar Docker Compose 2.30 o superior; no instalar dependencias en el host.
 - Validar los cambios con `docker compose config --quiet` y `git diff --check`.
 - Verificar el arranque con datos temporales, sin modificar `data/`, `rag/`
@@ -8,6 +8,12 @@
 - Los datos de `data/`, `rag/`, `documents/` y `.env` no se versionan.
 - Un único OpenClaw gestionará tres agentes. Sus permisos RAG están pendientes;
   no afirmar que existe aislamiento entre agentes por tener bases separadas.
+- `main` conserva el agente Personal existente; los otros IDs son `universidad`
+  y `tecnico-homelab`. Sus roles se versionan en `config/agents/*/SOUL.md` y se
+  montan en solo lectura. Aplicar `config/openclaw-agents.json` con `config patch`,
+  primero con `--dry-run`, para conservar la configuración y el estado existentes.
+  Con el Gateway arrancado, usar `docker compose exec` en su contenedor: un
+  `compose run` separado no puede verificar el bloqueo de estado entre namespaces.
 - Un único haiku-ingester es el escritor de las tres bases; no arrancar otro
   escritor contra ellas. Los tres MCP comparten Ollama y el servidor de reranking.
 - `documents/` se monta en solo lectura; el ingester guarda bases y cachés en

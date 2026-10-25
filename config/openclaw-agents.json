@@ -1,0 +1,24 @@
+{
+  "agents": {
+    "defaults": {
+      "systemAgent": { "agentId": "main" }
+    },
+    "entries": {
+      "main": {
+        "name": "Personal",
+        "identity": { "name": "Personal" },
+        "workspace": "/home/node/.openclaw/workspace"
+      },
+      "universidad": {
+        "name": "Universidad",
+        "identity": { "name": "Universidad" },
+        "workspace": "/home/node/.openclaw/workspace-universidad"
+      },
+      "tecnico-homelab": {
+        "name": "Técnico-Homelab",
+        "identity": { "name": "Técnico-Homelab" },
+        "workspace": "/home/node/.openclaw/workspace-tecnico-homelab"
+      }
+    }
+  }
+}
