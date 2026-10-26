@@ -3,8 +3,8 @@
 Infraestructura para un OpenClaw y tres bases RAG: **personal**, **universidad**
 y **técnico-homelab**. Comparten la ingesta, los embeddings y el reranker.
 
-Esta fase prepara los servicios y los tres agentes con sus roles. La conexión
-con sus RAG y los permisos por agente quedan para las siguientes PR.
+Los servicios y los tres agentes con sus roles ya están definidos. Las conexiones
+MCP se registran desactivadas hasta aplicar los permisos por agente.
 
 **Primera instalación:** sigue los pasos de [puesta en marcha](#puesta-en-marcha).
 Si OpenClaw ya está configurado, ve a [abrir el panel](#4-abrir-el-panel) y
@@ -197,7 +197,31 @@ Los canales y su enrutamiento quedan pendientes de configurar.
 
 Cada agente tiene su workspace y su estado de sesiones, pero esto **no es
 aislamiento de seguridad**. Los roles son instrucciones de comportamiento;
-los permisos por agente y la integración MCP todavía no están configurados.
+los permisos por agente todavía no están configurados.
+
+### 6. Registrar las conexiones MCP
+
+[`config/openclaw-mcp.json`](config/openclaw-mcp.json) conecta OpenClaw con los
+tres servicios haiku-rag mediante Streamable HTTP, sin publicar más puertos
+ni instalar clientes adicionales. Cada conexión ofrece cinco herramientas:
+buscar, listar, leer un documento, consultar su índice y leer una sección.
+El filtro excluye `execute_code`, que ejecuta Python en el servidor RAG.
+
+Con el Gateway arrancado, valida y aplica el parche:
+
+```sh
+docker compose exec -T openclaw node \
+  dist/index.js config patch --stdin --dry-run < config/openclaw-mcp.json
+docker compose exec -T openclaw node \
+  dist/index.js config patch --stdin < config/openclaw-mcp.json
+docker compose exec openclaw node dist/index.js mcp status --verbose
+```
+
+El parche conserva el resto de la configuración, incluidos otros servidores
+MCP. Las entradas `rag-personal`, `rag-universidad` y `rag-tecnico-homelab`
+deben aparecer desactivadas: registrar los endpoints no concede acceso a los
+agentes. Su activación y las pruebas de acceso llegarán con los permisos en
+la siguiente PR. Reaplicar este parche vuelve a desactivarlas.
 
 ## Añadir documentos
 
@@ -282,10 +306,9 @@ Cambiar de modelo requiere reindexar los documentos, aunque conserve la dimensi�
 
 ### Pendiente para las siguientes PR
 
-Quedan pendientes la integración MCP y los permisos por agente, además de los
-canales y su enrutamiento. OpenClaw todavía comparte red con los tres MCP;
-aún no está restringido a qué base puede acceder cada agente. Sus endpoints
-internos son
+Quedan pendientes la activación MCP y los permisos por agente, además de los
+canales y su enrutamiento. OpenClaw comparte red con los tres MCP; las conexiones
+registradas siguen desactivadas hasta aplicar los permisos. Sus endpoints son
 `http://haiku-rag-personal:8001/mcp`, `http://haiku-rag-universidad:8001/mcp` y
 `http://haiku-rag-tecnico-homelab:8001/mcp`.
 
@@ -296,6 +319,8 @@ internos son
 - [Acceso al panel en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/dashboard.md)
 - [Agentes en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/agents.md)
 - [Parches de configuración en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/cli/config.md#config-patch)
+- [Conexiones MCP en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/tools/mcp.md)
+- [Herramientas MCP de haiku-rag 0.101.0](https://github.com/ggozad/haiku.rag/blob/0.101.0/docs/mcp.md)
 - [Workspaces y archivos de rol en OpenClaw 2026.10.7](https://github.com/openclaw/openclaw/blob/v2026.10.7/docs/concepts/agent-workspace.md)
 - [Imágenes publicadas de haiku-rag](https://ggozad.github.io/haiku.rag/installation/#docker)
 - [Docling remoto y compatibilidad](https://github.com/ggozad/haiku.rag/blob/0.101.0/docs/remote-processing.md)
