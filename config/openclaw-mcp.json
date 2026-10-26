@@ -1,0 +1,48 @@
+{
+  "mcp": {
+    "servers": {
+      "rag-personal": {
+        "url": "http://haiku-rag-personal:8001/mcp",
+        "transport": "streamable-http",
+        "enabled": false,
+        "toolFilter": {
+          "include": [
+            "search_documents",
+            "list_documents",
+            "get_document",
+            "get_document_outline",
+            "get_document_section"
+          ]
+        }
+      },
+      "rag-universidad": {
+        "url": "http://haiku-rag-universidad:8001/mcp",
+        "transport": "streamable-http",
+        "enabled": false,
+        "toolFilter": {
+          "include": [
+            "search_documents",
+            "list_documents",
+            "get_document",
+            "get_document_outline",
+            "get_document_section"
+          ]
+        }
+      },
+      "rag-tecnico-homelab": {
+        "url": "http://haiku-rag-tecnico-homelab:8001/mcp",
+        "transport": "streamable-http",
+        "enabled": false,
+        "toolFilter": {
+          "include": [
+            "search_documents",
+            "list_documents",
+            "get_document",
+            "get_document_outline",
+            "get_document_section"
+          ]
+        }
+      }
+    }
+  }
+}
