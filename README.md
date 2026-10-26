@@ -4,8 +4,8 @@
 
 **Tres agentes. Tus documentos. Un único despliegue.**
 
-Un asistente personal, un tutor académico y un compañero para tu homelab,
-cada uno con su propia base documental y sus notas.
+Tres agentes para consultar tus documentos personales, de la universidad
+y del homelab. Cada uno accede únicamente a la base documental de su ámbito.
 
 [![OpenClaw 2026.10.7](https://img.shields.io/badge/OpenClaw-2026.10.7-0f766e?style=flat-square)](https://github.com/openclaw/openclaw/tree/v2026.10.7)
 [![haiku-rag 0.101.0](https://img.shields.io/badge/haiku--rag-0.101.0-0f766e?style=flat-square)](https://github.com/ggozad/haiku.rag/tree/0.101.0)
@@ -19,17 +19,21 @@ cada uno con su propia base documental y sus notas.
 
 <p align="center"><sub>Universidad en acción: una consulta sobre MongoDB con referencias a su base documental.</sub></p>
 
-## Un espacio para cada contexto
+## Un agente para cada tipo de documento
 
-| Agente | Para qué sirve | Sus documentos |
+| Agente | Documentación que consulta | Carpeta de documentos |
 | --- | --- | --- |
-| **Personal** | Organizar tareas, prioridades y planes del día a día. | `documents/personal/` |
-| **Universidad** | Trabajar con apuntes, comprender conceptos y preparar ejercicios y exámenes. | `documents/universidad/` |
-| **Técnico-Homelab** | Consultar documentación de sistemas, redes, contenedores y servicios. | `documents/tecnico/` |
+| **Personal** | Documentos personales. | `documents/personal/` |
+| **Universidad** | Apuntes y demás documentos de la universidad. | `documents/universidad/` |
+| **Técnico-Homelab** | Documentación de tu homelab. | `documents/tecnico/` |
 
-Los tres viven en un único OpenClaw. Cada agente tiene un rol, un workspace
-para sus notas y acceso a su propio RAG (*Retrieval-Augmented Generation*,
-o generación apoyada en documentos recuperados).
+El objetivo es hacer preguntas sobre cada conjunto de documentos manteniéndolos
+separados. Elige el agente del ámbito que quieras consultar: sus herramientas
+solo le permiten buscar en su propia base y acceder a sus notas.
+
+Los tres viven en un único OpenClaw. Cada agente tiene un workspace para sus
+notas y su propio RAG (*Retrieval-Augmented Generation*, o generación apoyada
+en documentos recuperados).
 
 Los roles les indican que consulten las fuentes antes de responder, citen el
 material utilizado y avisen si falta información. Los permisos limitan sus

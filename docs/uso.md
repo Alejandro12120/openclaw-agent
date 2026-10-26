@@ -2,11 +2,13 @@
 
 [← Inicio](../README.md) · [Instalación](instalacion.md) · [Arquitectura](arquitectura.md)
 
-Con el despliegue en marcha, estas son las tareas habituales para incorporar
-documentación, mantener los agentes y revisar el estado de los servicios.
+Con el despliegue en marcha, puedes consultar tus documentos personales,
+de la universidad y del homelab con el agente correspondiente. Esta guía explica
+cómo añadir documentos, hacer consultas y mantener los servicios.
 Ejecuta los comandos desde la raíz del repositorio.
 
 - [Añadir documentos](#añadir-documentos)
+- [Consultar documentos](#consultar-documentos)
 - [Trabajar con PDF grandes](#pdf-grandes)
 - [Consultar y controlar los servicios](#operaciones-habituales)
 - [Cambiar el modelo o sus credenciales](#cambiar-el-modelo-o-sus-credenciales)
@@ -18,11 +20,14 @@ Ejecuta los comandos desde la raíz del repositorio.
 
 Coloca cada archivo en la carpeta de su ámbito:
 
-| Carpeta de originales | Base RAG |
-| --- | --- |
-| `documents/personal/` | `personal` |
-| `documents/universidad/` | `universidad` |
-| `documents/tecnico/` | `tecnico-homelab` |
+| Carpeta de originales | Base RAG | Agente que la consulta |
+| --- | --- | --- |
+| `documents/personal/` | `personal` | Personal |
+| `documents/universidad/` | `universidad` | Universidad |
+| `documents/tecnico/` | `tecnico-homelab` | Técnico-Homelab |
+
+La carpeta de origen determina en qué base se indexa el archivo. Cada agente
+solo tiene herramientas para consultar la base de su ámbito.
 
 El ingester lee `./documents` **en solo lectura**, detecta cambios y realiza
 barridos periódicos. Para comprobar la ingesta y listar la base personal:
@@ -37,9 +42,17 @@ original, su contenido indexado se conserva (`delete_orphans: false`).
 Mantén un único escritor: no ejecutes otro ingester ni comandos de escritura
 contra estas bases mientras el servicio esté funcionando.
 
-Cuando la ingesta termine, abre un chat nuevo con el agente de ese ámbito.
+## Consultar documentos
+
+Cuando la ingesta termine, abre **Agents** en el panel y usa **Open chat** para
+abrir un chat nuevo con el agente del ámbito que quieras consultar.
 Puedes pedirle, por ejemplo: «Busca en mis documentos qué se explica sobre
-[tema] y cita las fuentes». Comprueba que haya una llamada a la herramienta
+[tema] y cita las fuentes». También puedes pedir resúmenes o comparar contenido
+de documentos de esa misma base. Para consultar otro ámbito, abre el chat del
+agente correspondiente; ninguno puede buscar en las bases de los otros dos.
+
+Las respuestas deben apoyarse en los documentos consultados e indicar si falta
+información para contestar. Comprueba que haya una llamada a la herramienta
 `rag-…__search_documents` antes de la respuesta y que la referencia corresponda
 al contenido consultado.
 

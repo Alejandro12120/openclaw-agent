@@ -3,7 +3,8 @@
 [← Inicio](../README.md) · [Uso y mantenimiento](uso.md) · [Arquitectura](arquitectura.md)
 
 Esta guía recorre la instalación completa: prepara los directorios, configura
-el modelo de conversación y conecta cada agente con su base documental.
+el modelo de conversación y conecta cada agente con su base documental para
+consultar por separado documentos personales, de la universidad y del homelab.
 
 Ejecuta los comandos desde la raíz del repositorio, en el servidor.
 
@@ -167,11 +168,11 @@ Tras configurar el proveedor del modelo en el paso 3, aplica
 [`config/openclaw-agents.json`](../config/openclaw-agents.json). Conserva el agente
 actual con ID `main` como **Personal** y añade los otros dos:
 
-| ID | Nombre y función | Workspace dentro de `data/openclaw/` |
+| ID | Nombre y documentación que consulta | Workspace dentro de `data/openclaw/` |
 | --- | --- | --- |
-| `main` | **Personal**: organización, tareas y planes personales; agente por defecto | `workspace/` |
-| `universidad` | **Universidad**: tutoría, apuntes, ejercicios y estudio | `workspace-universidad/` |
-| `tecnico-homelab` | **Técnico-Homelab**: sistemas, redes, contenedores y diagnóstico | `workspace-tecnico-homelab/` |
+| `main` | **Personal**: documentos personales; agente por defecto | `workspace/` |
+| `universidad` | **Universidad**: apuntes y demás documentos de la universidad | `workspace-universidad/` |
+| `tecnico-homelab` | **Técnico-Homelab**: documentación del homelab | `workspace-tecnico-homelab/` |
 
 Los roles están en los archivos `SOUL.md` de [`config/agents/`](../config/agents/).
 Compose los monta en solo lectura: edita esos archivos y repite la recreación
@@ -203,7 +204,8 @@ docker compose exec openclaw node dist/index.js agents list
 El parche se combina con la configuración existente y se puede repetir:
 conserva modelos, credenciales, sesiones y otros agentes que hayas añadido.
 Los nuevos agentes heredan el modelo por defecto configurado en OpenClaw.
-En el panel, abre **Agents** y usa **Open chat** en el agente que quieras.
+En el panel, abre **Agents** y usa **Open chat** en el agente del ámbito cuyos
+documentos quieras consultar.
 Los canales y su enrutamiento quedan pendientes de configurar.
 
 Los roles son instrucciones de comportamiento. Los permisos se aplican por

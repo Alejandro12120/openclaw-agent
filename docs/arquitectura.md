@@ -2,9 +2,15 @@
 
 [← Inicio](../README.md) · [Instalación](instalacion.md) · [Uso y mantenimiento](uso.md)
 
-Un único Gateway de OpenClaw gestiona los tres agentes. Cada uno consulta
-un servidor MCP de haiku-rag que abre su base en modo lectura. La ingesta
-corresponde a un único proceso compartido.
+Un único Gateway de OpenClaw gestiona tres agentes para consultar por separado
+documentos personales, de la universidad y del homelab. Cada agente tiene acceso
+solo a su base documental y a las notas de su propio workspace.
+
+Las tres bases se mantienen separadas. Cada una tiene un servidor MCP de
+haiku-rag que la abre en modo lectura; la ingesta corresponde a un único proceso
+compartido. Compartir los servicios de ingesta y modelos no da a los agentes
+acceso a las bases de los demás: ese acceso se limita mediante los permisos
+de herramientas.
 
 - [Servicios y versiones](#cómo-encajan-los-servicios)
 - [Almacenamiento](#dónde-se-guardan-los-datos)
