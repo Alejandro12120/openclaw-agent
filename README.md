@@ -199,6 +199,18 @@ Los canales y su enrutamiento quedan pendientes de configurar.
 Los roles son instrucciones de comportamiento. Los permisos se aplican por
 separado en el paso 7; crear tres agentes y tres bases no los configura.
 
+Los tres roles exigen consultar su RAG antes de responder preguntas de contenido
+y leer los archivos de su propio workspace cuando la pregunta se refiera a ellos.
+Deben citar las fuentes consultadas y avisar si faltan datos o falla la conexión.
+Los saludos, las aclaraciones y las transformaciones de texto aportado que no
+añadan hechos externos quedan exentos de buscar.
+
+Si solo cambias los `SOUL.md`, recrea OpenClaw con el comando anterior y abre
+un chat nuevo de cada agente; no hace falta reaplicar los parches. Para comprobar
+la conducta, pregunta por un documento conocido y revisa que haya una llamada
+real a `rag-…__search_documents` antes de la respuesta, con una cita pertinente.
+Prueba también una pregunta sin respaldo documental: debe indicar qué falta.
+
 ### 6. Registrar las conexiones MCP
 
 [`config/openclaw-mcp.json`](config/openclaw-mcp.json) conecta OpenClaw con los
@@ -317,6 +329,36 @@ docker compose up -d                # Volver a arrancar
 Para cambiar el proveedor o las credenciales del modelo, vuelve a ejecutar
 el asistente del paso 3 y reinicia OpenClaw con `docker compose restart openclaw`.
 Para recuperar el acceso al panel basta con el comando del paso 4.
+
+### Error al inicializar un workspace
+
+Si el chat muestra `Workspace filesystem does not support atomic bootstrap
+publication`, comprueba primero el propietario del workspace. OpenClaw
+`2026.10.7` también muestra ese mensaje cuando no puede escribir por falta de
+permisos, aunque el disco admita enlaces duros.
+
+Docker puede crear los directorios de Universidad y Técnico-Homelab como `root`
+si no existían al montar sus roles. Comprueba su propietario dentro del contenedor:
+
+```sh
+docker compose exec openclaw ls -ldn \
+  /home/node/.openclaw/workspace \
+  /home/node/.openclaw/workspace-universidad \
+  /home/node/.openclaw/workspace-tecnico-homelab
+```
+
+Si los dos nuevos workspaces pertenecen a `0:0`, ajusta solo esos directorios
+al usuario `1000:1000` de OpenClaw y vuelve a enviar el mensaje:
+
+```sh
+docker compose exec --user 0:0 openclaw chown 1000:1000 \
+  /home/node/.openclaw/workspace-universidad \
+  /home/node/.openclaw/workspace-tecnico-homelab
+```
+
+El cambio se aplica sin reiniciar. Los archivos `SOUL.md` siguen montados en
+solo lectura. Para evitarlo en instalaciones nuevas, crea los directorios del
+paso 2 con tu usuario antes de arrancar Compose.
 
 ## Dónde se guardan los datos
 
