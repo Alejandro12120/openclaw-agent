@@ -157,6 +157,9 @@ services:
     volumes:
       - ./data/openclaw:/home/node/.openclaw
       - ./data/auth:/home/node/.config/openclaw
+      - ./config/agents/personal/SOUL.md:/home/node/.openclaw/workspace/SOUL.md:ro
+      - ./config/agents/universidad/SOUL.md:/home/node/.openclaw/workspace-universidad/SOUL.md:ro
+      - ./config/agents/tecnico-homelab/SOUL.md:/home/node/.openclaw/workspace-tecnico-homelab/SOUL.md:ro
     healthcheck:
       test: ["CMD", "node", "dist/docker-healthcheck.js"]
       interval: 30s
