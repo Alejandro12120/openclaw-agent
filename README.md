@@ -135,11 +135,6 @@ Es un enlace de emparejamiento de un solo uso que caduca a los diez minutos.
 Si caduca o usas otro navegador, ejecuta de nuevo el comando. Tras emparejarlo,
 ese navegador conserva su acceso al panel.
 
-En OpenClaw `2026.10.7`, `dashboard --no-open` solo imprime la URL base en una
-terminal sin portapapeles: no proporciona el enlace autenticado. Usa `--json`
-y `browserUrl` también si el panel muestra `unauthorized` o pide emparejarlo.
-No hace falta entrar en una shell del contenedor ni leer `openclaw.json`.
-
 Si cambiaste `OPENCLAW_PORT`, ajusta el puerto tanto de la dirección HTTP como
 del parámetro `gatewayUrl` del enlace. Conserva los valores de emparejamiento.
 
