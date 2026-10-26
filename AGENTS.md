@@ -6,11 +6,14 @@
 - Verificar el arranque con datos temporales, sin modificar `data/`, `rag/`
   ni los archivos del usuario en `documents/`.
 - Los datos de `data/`, `rag/`, `documents/` y `.env` no se versionan.
-- Un único OpenClaw gestionará tres agentes. Sus permisos RAG están pendientes;
-  no afirmar que existe aislamiento entre agentes por tener bases separadas.
+- Un único OpenClaw gestiona tres agentes. Cada uno solo puede consultar su RAG
+  y sus notas del workspace, sin comandos ni herramientas de sesiones. Son permisos
+  de herramientas, no separación de procesos ni de usuarios del sistema operativo.
 - `config/openclaw-mcp.json` registra los tres MCP desactivados. Mantener el
   filtro de herramientas de lectura; no habilitar `execute_code`. La activación
-  debe acompañarse de permisos por agente y pruebas de accesos denegados.
+  se hace con `config/openclaw-permissions.json`, después del parche de agentes
+  y del de MCP. Probar tanto las consultas propias como los accesos denegados a
+  otros RAG, archivos y sesiones. No montar el socket Docker en OpenClaw.
 - `main` conserva el agente Personal existente; los otros IDs son `universidad`
   y `tecnico-homelab`. Sus roles se versionan en `config/agents/*/SOUL.md` y se
   montan en solo lectura. Aplicar `config/openclaw-agents.json` con `config patch`,

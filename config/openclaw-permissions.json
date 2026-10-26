@@ -1,0 +1,43 @@
+{
+  "agents": {
+    "entries": {
+      "main": {
+        "tools": {
+          "profile": "full",
+          "allow": ["group:fs", "rag-personal__*"],
+          "deny": ["group:runtime", "group:sessions", "skills_read"],
+          "fs": { "workspaceOnly": true },
+          "codeMode": { "enabled": false },
+          "elevated": { "enabled": false }
+        }
+      },
+      "universidad": {
+        "tools": {
+          "profile": "full",
+          "allow": ["group:fs", "rag-universidad__*"],
+          "deny": ["group:runtime", "group:sessions", "skills_read"],
+          "fs": { "workspaceOnly": true },
+          "codeMode": { "enabled": false },
+          "elevated": { "enabled": false }
+        }
+      },
+      "tecnico-homelab": {
+        "tools": {
+          "profile": "full",
+          "allow": ["group:fs", "rag-tecnico-homelab__*"],
+          "deny": ["group:runtime", "group:sessions", "skills_read"],
+          "fs": { "workspaceOnly": true },
+          "codeMode": { "enabled": false },
+          "elevated": { "enabled": false }
+        }
+      }
+    }
+  },
+  "mcp": {
+    "servers": {
+      "rag-personal": { "enabled": true },
+      "rag-universidad": { "enabled": true },
+      "rag-tecnico-homelab": { "enabled": true }
+    }
+  }
+}
